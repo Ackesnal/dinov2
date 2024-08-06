@@ -212,8 +212,8 @@ class _TorchDistributedEnvironment:
         self.master_addr = "127.0.0.1"
         self.master_port = _get_available_port()
         self.rank = 0
-        self.world_size = 1
-        self.local_rank = 0
+        self.world_size = torch.cuda.device_count()
+        self.local_rank = int(os.environ["SUBMITIT_LOCAL_LOCALID"]) if "SUBMITIT_LOCAL_LOCALID" in os.environ else 0
         self.local_world_size = 1
 
     def export(self, *, overwrite: bool) -> "_TorchDistributedEnvironment":
@@ -252,7 +252,7 @@ def enable(*, set_cuda_current_device: bool = True, overwrite: bool = False, all
     torch_env.export(overwrite=overwrite)
 
     if set_cuda_current_device:
-        torch.cuda.set_device(torch_env.local_rank)
+        torch.cuda.set_device(torch_env.local_rank) 
 
     if allow_nccl_timeout:
         # This allows to use torch distributed timeout in a NCCL backend
@@ -260,7 +260,7 @@ def enable(*, set_cuda_current_device: bool = True, overwrite: bool = False, all
         if not overwrite:
             _check_env_variable(key, value)
         os.environ[key] = value
-
+    
     dist.init_process_group(backend="nccl")
     dist.barrier()
 

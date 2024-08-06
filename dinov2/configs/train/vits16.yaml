@@ -1,0 +1,11 @@
+# this corresponds to the default config
+train:
+  dataset_path: ImageNet:split=TRAIN
+  batch_size_per_gpu: 256
+student:
+  arch: vit_small
+  patch_size: 16
+  drop_path_rate: 0.0
+  block_chunks: 4
+teacher:
+  momentum_teacher: 0.994
