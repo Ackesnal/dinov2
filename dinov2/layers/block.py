@@ -82,10 +82,9 @@ class Block(nn.Module):
             drop=drop,
             bias=ffn_bias,
             init_values=init_values
-            
         )
         #self.ls2 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
-        self.drop_path2 = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+        #self.drop_path2 = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
 
         self.sample_drop_ratio = drop_path
 
@@ -94,7 +93,7 @@ class Block(nn.Module):
             return self.ls1(self.attn(self.norm1(x)))
 
         def ffn_residual_func(x: Tensor) -> Tensor:
-            return self.ls2(self.mlp(self.norm2(x)))
+            return self.mlp(x) #self.ls2(self.mlp(self.norm2(x)))
 
         if self.training and self.sample_drop_ratio > 0.1:
             # the overhead is compensated only for a drop path rate larger than 0.1
@@ -110,10 +109,10 @@ class Block(nn.Module):
             )
         elif self.training and self.sample_drop_ratio > 0.0:
             x = x + self.drop_path1(attn_residual_func(x))
-            x = x + self.drop_path1(ffn_residual_func(x))  # FIXME: drop_path2
+            x = ffn_residual_func(x) # x + self.drop_path1(ffn_residual_func(x))  # FIXME: drop_path2
         else:
             x = x + attn_residual_func(x)
-            x = x + ffn_residual_func(x)
+            x = ffn_residual_func(x) # x + ffn_residual_func(x)
         return x
 
 
@@ -224,7 +223,7 @@ class NestedTensorBlock(Block):
                 return self.attn(self.norm1(x), attn_bias=attn_bias)
 
             def ffn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                return self.mlp(self.norm2(x))
+                return self.mlp(x) # self.mlp(self.norm2(x))
 
             x_list = drop_add_residual_stochastic_depth_list(
                 x_list,
@@ -245,11 +244,11 @@ class NestedTensorBlock(Block):
                 return self.ls1(self.attn(self.norm1(x), attn_bias=attn_bias))
 
             def ffn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                return self.ls2(self.mlp(self.norm2(x)))
+                return self.mlp(x) #self.ls2(self.mlp(self.norm2(x)))
 
             attn_bias, x = get_attn_bias_and_cat(x_list)
             x = x + attn_residual_func(x, attn_bias=attn_bias)
-            x = x + ffn_residual_func(x)
+            x = ffn_residual_func(x) # x + ffn_residual_func(x)
             return attn_bias.split(x)
 
     def forward(self, x_or_x_list):

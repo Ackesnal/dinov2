@@ -11,8 +11,10 @@
 from typing import Callable, Optional
 
 from torch import Tensor, nn
+import torch
 
 
+"""
 class Mlp(nn.Module):
     def __init__(
         self,
@@ -38,7 +40,7 @@ class Mlp(nn.Module):
         x = self.fc2(x)
         x = self.drop(x)
         return x
-
+"""
 
 class Mlp(nn.Module):
     """ MLP as used in Vision Transformer, MLP-Mixer and related networks
@@ -52,16 +54,16 @@ class Mlp(nn.Module):
             drop=0.,
             channel_idle=True,
             act_layer=nn.GELU,
-            feature_norm="BatchNorm"
+            feature_norm="BatchNorm",
             init_values=1e-5):
             
         super().__init__()
         
         ######################## ↓↓↓↓↓↓ ########################
         # Hyperparameters
-        self.dim_in = dim_in
-        self.dim_hidden = dim_hidden or dim_in
-        self.dim_out = dim_out or dim_in
+        self.dim_in = in_features
+        self.dim_hidden = hidden_features or in_features
+        self.dim_out = out_features or in_features
         ######################## ↑↑↑↑↑↑ ########################
         
         ######################## ↓↓↓↓↓↓ ########################
@@ -74,7 +76,7 @@ class Mlp(nn.Module):
         ######################## ↓↓↓↓↓↓ ########################
         # Channel-idle
         self.channel_idle = channel_idle
-        self.act_channels = dim_in
+        self.act_channels = in_features
         ######################## ↑↑↑↑↑↑ ########################
         
         ######################## ↓↓↓↓↓↓ ########################
@@ -93,9 +95,8 @@ class Mlp(nn.Module):
             
         ######################## ↓↓↓↓↓↓ ########################
         # Layer Scale
-        self.layer_scale = layer_scale
-        if self.layer_scale:
-            self.ls = nn.Parameter(torch.ones((self.dim_out)) * init_values)
+        self.layer_scale = True
+        self.ls = nn.Parameter(torch.ones((self.dim_out)) * init_values)
         ######################## ↑↑↑↑↑↑ ########################
         
     def forward(self, x):
