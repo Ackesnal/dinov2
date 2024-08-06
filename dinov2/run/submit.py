@@ -112,7 +112,8 @@ def submit_jobs(task_class, args, name: str):
         slurm_partition=args.partition,
         **kwargs,
     )
-    executor.update_parameters(name=name, **executor_params)
+    executor_params.pop("gpus_per_node")
+    executor.update_parameters(name=name, slurm_additional_parameters={"gres": f"gpu:tesla-smx2:{args.ngpus}"}, **executor_params)
 
     task = task_class(args)
     job = executor.submit(task)

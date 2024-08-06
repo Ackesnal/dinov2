@@ -198,14 +198,17 @@ def do_train(cfg, model, resume=False):
     )
     # sampler_type = SamplerType.INFINITE
     sampler_type = SamplerType.SHARDED_INFINITE
+    # sampler_type = SamplerType.DISTRIBUTED
+    # sampler_type = SamplerType.SHARDED_INFINITE_NEW
+    # sampler_type = SamplerType.EPOCH
     data_loader = make_data_loader(
         dataset=dataset,
         batch_size=cfg.train.batch_size_per_gpu,
         num_workers=cfg.train.num_workers,
         shuffle=True,
-        seed=start_iter,  # TODO: Fix this -- cfg.train.seed
+        seed=cfg.train.seed,  # TODO: Fix this -- cfg.train.seed
         sampler_type=sampler_type,
-        sampler_advance=0,  # TODO(qas): fix this -- start_iter * cfg.train.batch_size_per_gpu,
+        sampler_advance=start_iter * cfg.train.batch_size_per_gpu,  # TODO(qas): fix this -- start_iter * cfg.train.batch_size_per_gpu,
         drop_last=True,
         collate_fn=collate_fn,
     )
